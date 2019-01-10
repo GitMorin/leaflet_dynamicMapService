@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- title -->
+    <title>Leaflet Map</title>
+    <!-- meta -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+      integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+      crossorigin=""/>
+    <link rel="stylesheet" href="mystyle.css"/>
+  </head>
+
+  <body>
+  <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">leaflet map</a>
+      </div>
+
+      <ul class="nav navbar-nav">
+        <li><a href="/">home</a></li>
+        <li><a href="/about">about</a></li>
+      </ul>
+
+    </div>
+  </nav>  
+
+  <div id="map"></div>
+  <div id="selectedFeatures" class="leaflet-bar map-text"><table id="feature-info-table">
+    </table> <a  target=”_blank” href="https://sampleserver6.arcgisonline.com/arcgis/rest/services/Water_Network/MapServer">Click for feature info</a>
+  </div>
+  <% include ../partials/scripts %>
+  </body>
+
+</html>

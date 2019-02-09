@@ -11,7 +11,7 @@
 <script>
 
 
-var map = new L.Map('map').setView([ 41.774469, -88.150322 ], 14);
+var map = new L.Map('map').setView([40.28414186399997, -109.866420897778], 14);
 
 var layerControl = L.control.layers(null, null);
 layerControl.addTo(map);
@@ -25,31 +25,62 @@ layerControl.addTo(map);
   var overlays = {};
   // call service to check what layers exist
   
-  let url = "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Water_Network/MapServer";
-  //let url = "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Energy/Infrastructure/MapServer";
+  //let url = "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Water_Network/MapServer";
+  let url = "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Energy/Infrastructure/MapServer";
   let serviceUrl = url+'?f=pjson';
-  //fetch('http://example.com/movies.json')
   fetch(serviceUrl, {method:"get"})
   .then(function(response) {
     return response.json();
   })
   .then(function(esriService) {
     esriService.layers.forEach(function(layer) {
+      console.log(layer.id); // need to pass this to findFeature info...
       let layerName = layer.name.replace(/\s/g, "");
+      let objName = layer.name.replace(/\s/g, "");
       let fullName = layer.name // return string
-      //console.log(layerName)
       layerName = L.esri.dynamicMapLayer({
         url: url,
         layers: [layer.id]
       }).addTo(map);
+      // Add layers to layerObjects
+      layerObjects[objName] = layerName;
+      // Add layers to layer control
       layerControl.addOverlay(layerName, fullName)
     })
   });
 
-var service = L.esri.dynamicMapLayer({
-    url: url,
-    opacity: 0.7
-  });
+let layerObjects = {}
+
+// Can probably use this to update the legend wiht checking names Or use the id again
+// map.on('click', function (e) {
+// if (!map.hasLayer(layerObjects.Wells)) {
+//   console.log("no layer with that name")
+// } else {
+//   console.log("Layer name is in map")
+//   }
+// });
+
+hasLayer = false
+
+map.on('click', function (e) {
+  let layerids = [];
+  pane.innerHTML = 'Loading';
+  if (identifiedFeature){
+    map.removeLayer(identifiedFeature);
+    hasLayer = false
+  }
+  for (let key in layerObjects) {
+    if (!map.hasLayer(layerObjects[key])) {
+    } else {
+      layerids.push(layerObjects[key].options.layers[0])
+    }
+  }
+  getFeatureInfo(e,layerids)
+});
+
+map.on('overlayremove', function(e) {
+  console.log("Removed layer: " + e.name);
+});
 
   var identifiedFeature;
   var pane = document.getElementById('feature-info-table');
@@ -60,38 +91,26 @@ var service = L.esri.dynamicMapLayer({
     }
   });
 
-  map.on('click', function (e) {
-    // abstract identity function
-    console.log(e)
-    pane.innerHTML = 'Loading';
-    if (identifiedFeature){
-      map.removeLayer(identifiedFeature);
-      console.log('has layer');
-    }
-    getFeatureInfo(e)
+ var service = L.esri.dynamicMapLayer({
+    url: url,
   });
 
-function populateTable(data) {
-  for (var key in data) {
-    if (data.hasOwnProperty(key)) {
-      const markup = `
-        <tr>
-          <th>${key}</th>
-          <td>${data[key]}</td>
-        </tr>`
-      pane.innerHTML += markup
-    }
-  }
-};
-
-function getFeatureInfo(e) {
-  console.log('called');
-  service.identify().on(map).at(e.latlng).run(function(error, featureCollection){
-      // make sure at least one feature was identified.
+// need to pass array of id's to this
+function getFeatureInfo(e,ids) {
+  findInLayers = ids.toString();
+  service.identify()
+  .on(map)
+  .at(e.latlng)
+  .layers('top:' + findInLayers)
+  .run(function(error, featureCollection){ 
+    console.log(featureCollection)
       if (featureCollection.features.length > 0) {
-        identifiedFeature = L.geoJSON(featureCollection.features[0], {
-          style: {"color": "red"},
-        }).addTo(map);
+        if (!hasLayer) {
+          identifiedFeature = L.geoJSON(featureCollection.features[0], {
+            style: {"color": "red"},
+          }).addTo(map);
+          hasLayer = true
+        }
         console.log(featureCollection.features[0]);
         pane.innerHTML = "<h4>Feature description</h4>";
         let keyValue = featureCollection.features[0].properties
@@ -101,8 +120,20 @@ function getFeatureInfo(e) {
         pane.innerHTML = 'No features identified.';
       }
     });
-}
-
+  }
+  
+  function populateTable(data) {
+    for (var key in data) {
+      if (data.hasOwnProperty(key)) {
+        const markup = `
+          <tr>
+            <th>${key}</th>
+            <td>${data[key]}</td>
+          </tr>`
+        pane.innerHTML += markup
+      }
+    }
+  };
 // TODO: Add legend
 // Revert the order the layers are added to the map to make sure points in on top
 // Get feature info only for visible layers
